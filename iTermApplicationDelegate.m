@@ -136,6 +136,7 @@ static BOOL hasBecomeActive = NO;
         [setInv setSelector:@selector(setPresentationOptions:)];
         [setInv setArgument:&presentationOptions atIndex:2];
         [setInv invoke];
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
     } else {
         // Emulate setPresentationOptions API for OS 10.5.
         if (flags & NSApplicationPresentationAutoHideMenuBar) {
@@ -143,7 +144,7 @@ static BOOL hasBecomeActive = NO;
         } else if (antiflags & NSApplicationPresentationAutoHideMenuBar) {
             SetSystemUIMode(kUIModeNormal, 0);
         }
-
+#endif
     }
 }
 

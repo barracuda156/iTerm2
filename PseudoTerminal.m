@@ -78,7 +78,6 @@
 #import "ColorsMenuItemView.h"
 #import "iTermFontPanel.h"
 #import "FutureMethods.h"
-#import "iTermPromotionalMessageManager.h"
 
 #define CACHED_WINDOW_POSITIONS 100
 
@@ -4482,7 +4481,7 @@ NSString *sessionsKey = @"sessions";
 - (void)_refreshTerminal:(NSNotification *)aNotification
 {
     PtyLog(@"_refreshTerminal - calling fitWindowToTabs");
-    
+
     // If hiding of menu bar changed.
     if ([self fullScreen] && ![self lionFullScreen]) {
         if ([[self window] isKeyWindow]) {
@@ -4561,6 +4560,7 @@ NSString *sessionsKey = @"sessions";
         currentScreen = [NSScreen mainScreen];
     }
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1090
     // If screens have separate spaces (only applicable in Mavericks and later) then all screens have a menu bar.
     if (currentScreen == menubarScreen || (IsMavericksOrLater() && [NSScreen futureScreensHaveSeparateSpaces])) {
         int flags = NSApplicationPresentationAutoHideDock;
@@ -4570,21 +4570,26 @@ NSString *sessionsKey = @"sessions";
         iTermApplicationDelegate *itad = (iTermApplicationDelegate *)[[iTermApplication sharedApplication] delegate];
         [itad setFutureApplicationPresentationOptions:flags unset:0];
     }
+#endif
 }
 
 - (void)showMenuBarHideDock
 {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
     iTermApplicationDelegate *itad = [[iTermApplication sharedApplication] delegate];
     [itad setFutureApplicationPresentationOptions:NSApplicationPresentationAutoHideDock
                                             unset:NSApplicationPresentationAutoHideMenuBar];
+#endif
 }
 
 - (void)showMenuBar
 {
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
     int flags = NSApplicationPresentationAutoHideDock | NSApplicationPresentationAutoHideMenuBar;
     iTermApplicationDelegate *itad = [[iTermApplication sharedApplication] delegate];
     [itad setFutureApplicationPresentationOptions:0
                                             unset:flags];
+#endif
 }
 
 // Grow or shrink the tabview to make room for the find bar in fullscreen mode
@@ -4768,13 +4773,6 @@ NSString *sessionsKey = @"sessions";
     [TABVIEW processMRUEvent:theEvent];
 
     NSUInteger modifierFlags = [theEvent modifierFlags];
-    if (!(modifierFlags & (NSCommandKeyMask | NSAlternateKeyMask | NSControlKeyMask | NSShiftKeyMask))) {
-        // Schedule a promotional message when the user has interacted lightly with the app. If a
-        // message is available to be shown, it'll pop up in a few seconds. This prevents headless
-        // machines from getting interrupted by a promo.
-        [[iTermPromotionalMessageManager sharedInstance] scheduleDisplayIfNeeded];
-    }
-
     if (!(modifierFlags & NSCommandKeyMask) &&
         [[[self currentSession] TEXTVIEW] isFindingCursor]) {
         // The cmd key was let up while finding the cursor
@@ -5960,12 +5958,13 @@ NSString *sessionsKey = @"sessions";
     [[self ptyWindow] setRestoreState:lastArrangement_];
 }
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
 - (NSApplicationPresentationOptions)window:(NSWindow *)window
       willUseFullScreenPresentationOptions:(NSApplicationPresentationOptions)proposedOptions
 {
     return proposedOptions | NSApplicationPresentationAutoHideToolbar;
 }
-
+#endif
 
 // accessors for to-many relationships:
 // (See NSScriptKeyValueCoding.h)
